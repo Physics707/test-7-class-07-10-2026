@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#04070f">
+<title>Тест · Физика 7 · Прямолинейное равномерное и неравномерное движение</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Manrope:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* ============ БАЗА ============ */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#04070f; --panel:rgba(10,16,31,.88); --line:#1b2742;
+  --cyan:#22d3ee; --pink:#ff2ea6; --pinkL:#ff6cc0; --lime:#b8ff2e;
+  --amber:#ffc531; --red:#ff4d6d; --text:#eaf2ff; --muted:#8ba1c7;
+}
+html,body{height:100%}
+body{
+  font-family:'Manrope',system-ui,sans-serif; background:var(--bg); color:var(--text);
+  min-height:100dvh; overflow-x:hidden; overscroll-behavior:none; touch-action:manipulation;
+}
+button,input,select{font-family:inherit;color:inherit}
+
+/* фон: миллиметровка + неоновые свечения */
+.bg-grid{position:fixed;inset:0;z-index:-2;
+  background-image:
+    linear-gradient(rgba(80,160,255,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(80,160,255,.05) 1px,transparent 1px),
+    linear-gradient(rgba(80,160,255,.10) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(80,160,255,.10) 1px,transparent 1px);
+  background-size:26px 26px,26px 26px,130px 130px,130px 130px;
+  -webkit-mask-image:radial-gradient(ellipse at 50% 38%,#000 30%,transparent 92%);
+  mask-image:radial-gradient(ellipse at 50% 38%,#000 30%,transparent 92%);
+}
+.bg-glow{position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(620px 440px at 12% -5%, rgba(34,211,238,.14), transparent 65%),
+    radial-gradient(720px 540px at 105% 108%, rgba(255,46,166,.11), transparent 60%),
+    radial-gradient(520px 420px at 88% 8%, rgba(184,255,46,.05), transparent 60%);
+  animation:glowFloat 16s ease-in-out infinite alternate;
+}
+@keyframes glowFloat{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(-16px,12px,0) scale(1.05)}}
+
+/* ============ ЭКРАНЫ ============ */
+.screen{display:none;min-height:100dvh;padding:calc(20px + env(safe-area-inset-top)) 16px calc(30px + env(safe-area-inset-bottom));justify-content:center;align-items:flex-start}
+.screen.active{display:flex;animation:scrIn .5s cubic-bezier(.2,.8,.25,1)}
+@keyframes scrIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.card{width:100%;max-width:660px;background:var(--panel);border:1px solid rgba(34,211,238,.16);
+  border-radius:22px;padding:clamp(18px,4vw,34px);
+  box-shadow:0 24px 60px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.04);backdrop-filter:blur(8px)}
+
+.badges{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.chip{font:700 10.5px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;
+  padding:8px 12px;border-radius:999px;border:1px solid rgba(34,211,238,.35);color:var(--cyan);
+  background:rgba(34,211,238,.06);box-shadow:0 0 12px rgba(34,211,238,.12)}
+.chip.pink{border-color:rgba(255,46,166,.42);color:var(--pinkL);background:rgba(255,46,166,.06)}
+.chip.lime{border-color:rgba(184,255,46,.35);color:var(--lime);background:rgba(184,255,46,.05)}
+
+h1.title{font-family:'Unbounded';font-weight:800;font-size:clamp(23px,5.3vw,38px);line-height:1.14}
+h1 .t-top{display:block;font-size:.52em;font-weight:500;letter-spacing:.34em;color:var(--muted);margin-bottom:8px;text-transform:uppercase}
+h1 .neon{color:var(--cyan);text-shadow:0 0 20px rgba(34,211,238,.65)}
+h1 .neon-p{color:var(--pinkL);text-shadow:0 0 20px rgba(255,46,166,.55)}
+.sub{color:var(--muted);margin-top:10px;font-size:15px;line-height:1.55}
+
+/* дорожки движения (живая иллюстрация темы) */
+.motion{margin:22px 0 6px;display:grid;gap:16px;padding:16px 14px 14px;border:1px dashed rgba(34,211,238,.28);border-radius:16px;background:rgba(4,10,20,.5)}
+.lane{display:grid;gap:7px}
+.lane .tag{font:600 10.5px/1 'JetBrains Mono',monospace;letter-spacing:.1em;color:var(--muted)}
+.track{position:relative;height:12px;border-radius:99px;background:repeating-linear-gradient(90deg,rgba(139,161,199,.26) 0 8px,transparent 8px 16px)}
+.dot{position:absolute;top:50%;left:2px;width:12px;height:12px;border-radius:50%;transform:translateY(-50%)}
+.dot.uni{background:var(--cyan);box-shadow:0 0 10px var(--cyan),0 0 26px rgba(34,211,238,.6);animation:run 6s linear infinite}
+.dot.acc{background:var(--pinkL);box-shadow:0 0 10px var(--pink),0 0 26px rgba(255,46,166,.6);animation:run 6s cubic-bezier(.6,0,.92,.28) infinite}
+@keyframes run{0%{left:2px;opacity:0}7%{opacity:1}90%{opacity:1}100%{left:calc(100% - 14px);opacity:0}}
+
+.teacher{display:flex;gap:12px;align-items:center;margin:18px 0 4px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:rgba(8,13,26,.6)}
+.teacher .ava{flex:0 0 42px;height:42px;border-radius:12px;display:grid;place-items:center;font-family:'Unbounded';font-weight:700;font-size:14px;color:#041018;background:linear-gradient(135deg,var(--cyan),#7af0ff);box-shadow:0 0 16px rgba(34,211,238,.4)}
+.teacher small{display:block;color:var(--muted);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:3px}
+.teacher b{font-size:15px}
+
+.field{margin-top:16px}
+.field label{display:block;font:700 10.5px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.inp{width:100%;background:#070c18;border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;font-size:16px;color:var(--text);outline:none;transition:border-color .25s,box-shadow .25s;appearance:none;-webkit-appearance:none}
+.inp:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(34,211,238,.12),0 0 18px rgba(34,211,238,.25)}
+select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%2322d3ee' stroke-width='2' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.hintline{margin-top:12px;font:600 12px 'JetBrains Mono',monospace;color:var(--muted);letter-spacing:.03em}
+
+.btn{display:flex;width:100%;justify-content:center;align-items:center;gap:10px;margin-top:22px;padding:16px;border-radius:16px;border:1.5px solid var(--line);background:#0a1020;color:var(--muted);font:800 15px 'Manrope';letter-spacing:.04em;cursor:pointer;transition:all .3s;user-select:none}
+.btn.armed{color:#03121a;background:linear-gradient(135deg,#22d3ee,#7af0ff);border-color:transparent;box-shadow:0 0 18px rgba(34,211,238,.55),0 0 52px rgba(34,211,238,.22)}
+.btn.armed:active{transform:scale(.98)}
+.btn.pinkArmed.armed{background:linear-gradient(135deg,#ff2ea6,#ff7cc8);box-shadow:0 0 18px rgba(255,46,166,.55),0 0 52px rgba(255,46,166,.22)}
+.foot{margin-top:14px;text-align:center;font:600 11px 'JetBrains Mono',monospace;color:var(--muted);letter-spacing:.06em;opacity:.8}
+
+/* правила */
+.rules{display:grid;gap:10px;margin:18px 0}
+.rule{display:flex;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:rgba(8,13,26,.55);font-size:14.5px;line-height:1.5;align-items:flex-start}
+.rule .ic{flex:0 0 34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:16px;background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.3)}
+.agree{display:flex;gap:12px;align-items:flex-start;margin-top:16px;cursor:pointer;font-size:14px;line-height:1.5}
+.agree input{appearance:none;-webkit-appearance:none;flex:0 0 22px;height:22px;border:1.5px solid var(--line);border-radius:7px;background:#070c18;display:grid;place-items:center;transition:all .25s;cursor:pointer;margin-top:1px}
+.agree input:checked{border-color:var(--cyan);background:rgba(34,211,238,.12);box-shadow:0 0 12px rgba(34,211,238,.45)}
+.agree input:checked::after{content:"✓";color:var(--cyan);font-weight:900;font-size:14px}
+
+/* ============ ТЕСТ ============ */
+#scrQuiz{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.qcount{font:700 12.5px 'JetBrains Mono',monospace;color:var(--muted);line-height:1.7}
+.qcount b{color:var(--cyan);font-size:20px;text-shadow:0 0 12px rgba(34,211,238,.5)}
+.timer{display:flex;align-items:center;gap:9px}
+.ring{width:46px;height:46px;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:4;stroke-linecap:round}
+.ring .rbg{stroke:rgba(139,161,199,.18)}
+.ring .rfg{stroke:var(--cyan);stroke-dasharray:125.66;filter:drop-shadow(0 0 4px rgba(34,211,238,.7));transition:stroke .3s}
+.timer.danger .rfg{stroke:var(--red);filter:drop-shadow(0 0 6px rgba(255,77,109,.9))}
+#timeTxt{font:700 16px 'JetBrains Mono',monospace;color:var(--cyan);min-width:46px}
+.timer.danger #timeTxt{color:var(--red);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.35}}
+.prog{display:flex;gap:5px;margin:14px 0 18px}
+.prog i{flex:1;height:5px;border-radius:99px;background:rgba(139,161,199,.15);transition:all .3s}
+.prog i.done{background:var(--cyan);box-shadow:0 0 8px rgba(34,211,238,.6)}
+.prog i.cur{background:rgba(34,211,238,.4);animation:pulseSeg 1.2s ease-in-out infinite}
+@keyframes pulseSeg{50%{box-shadow:0 0 12px rgba(34,211,238,.9)}}
+
+.qtype{display:inline-block;font:700 10.5px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;padding:7px 11px;border-radius:999px;margin-bottom:14px}
+.qtype.mc{color:var(--cyan);border:1px solid rgba(34,211,238,.4);background:rgba(34,211,238,.07)}
+.qtype.gr{color:var(--pinkL);border:1px solid rgba(255,46,166,.45);background:rgba(255,46,166,.07)}
+.qtype.ca{color:var(--lime);border:1px solid rgba(184,255,46,.4);background:rgba(184,255,46,.06)}
+.qtext{font-size:clamp(16.5px,3.9vw,19px);font-weight:700;line-height:1.5}
+.qtext sub{font-size:.68em}
+
+.opts{display:grid;gap:10px;margin-top:18px}
+.opt{display:flex;align-items:center;gap:12px;text-align:left;padding:14px;border:1.5px solid var(--line);border-radius:14px;background:#0a101f;cursor:pointer;transition:border-color .2s,box-shadow .2s,background .2s,transform .12s;font-size:15px;line-height:1.45}
+.opt:active{transform:scale(.985)}
+.opt .k{flex:0 0 30px;height:30px;border-radius:9px;display:grid;place-items:center;font:700 12px 'Unbounded';color:var(--muted);border:1px solid var(--line);transition:all .2s}
+.opt.sel{border-color:var(--cyan);background:rgba(34,211,238,.08);box-shadow:0 0 14px rgba(34,211,238,.5),0 0 38px rgba(34,211,238,.15),inset 0 0 20px rgba(34,211,238,.05)}
+.opt.sel .k{color:#03121a;background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 12px rgba(34,211,238,.8)}
+
+.calcbox{margin-top:18px;display:grid;gap:10px;justify-items:center}
+#numAns{width:min(240px,70vw);text-align:center;font:700 28px 'JetBrains Mono',monospace;padding:14px;background:#070c18;border:1.5px solid var(--line);border-radius:16px;color:#eaffff;outline:none;transition:all .25s;caret-color:var(--cyan);user-select:text;-webkit-user-select:text}
+#numAns:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(34,211,238,.12),0 0 22px rgba(34,211,238,.3)}
+#numAns.ok{border-color:var(--lime);box-shadow:0 0 16px rgba(184,255,46,.4)}
+.hint{font:600 11.5px 'JetBrains Mono',monospace;color:var(--muted);letter-spacing:.05em;text-align:center}
+
+#qCard.locked .opt,#qCard.locked #numAns{pointer-events:none;opacity:.55}
+
+/* графики */
+.graph{width:100%;max-width:400px;height:auto;display:block;margin:14px auto 2px}
+.gm{stroke:rgba(120,190,255,.11);stroke-width:1}
+.ax{stroke:#9fb4d8;stroke-width:1.6}
+.axf{fill:#9fb4d8}
+.tk{fill:#8ba1c7;font:600 11px 'JetBrains Mono',monospace}
+.al{fill:#dff6ff;font:700 13px 'JetBrains Mono',monospace}
+.ln{stroke:var(--cyan);stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.ln-glow{stroke:rgba(34,211,238,.28);stroke-width:9;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.dash{stroke:rgba(255,46,166,.85);stroke-width:1.6;stroke-dasharray:5 5}
+.pt{fill:#ff2ea6;filter:drop-shadow(0 0 6px rgba(255,46,166,.9))}
+
+/* тост / модалка */
+.toast{position:fixed;left:50%;bottom:calc(26px + env(safe-area-inset-bottom));transform:translate(-50%,20px);padding:12px 20px;border-radius:14px;border:1px solid rgba(255,197,49,.5);background:rgba(30,22,4,.94);color:var(--amber);font-weight:700;font-size:14px;opacity:0;pointer-events:none;transition:all .35s;z-index:60;box-shadow:0 0 24px rgba(255,197,49,.25);max-width:92vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.modal{position:fixed;inset:0;display:none;place-items:center;background:rgba(2,4,10,.84);backdrop-filter:blur(6px);z-index:80;padding:20px}
+.modal.show{display:grid;animation:fadeIn .25s}
+@keyframes fadeIn{from{opacity:0}}
+.modal-card{max-width:440px;width:100%;background:#0d0a13;border:1.5px solid rgba(255,77,109,.55);border-radius:22px;padding:30px 24px;text-align:center;box-shadow:0 0 44px rgba(255,77,109,.28),0 30px 60px rgba(0,0,0,.6);animation:popIn .3s cubic-bezier(.2,1.2,.3,1)}
+@keyframes popIn{from{transform:scale(.9);opacity:0}}
+.warn-ico{font-size:46px;filter:drop-shadow(0 0 16px rgba(255,197,49,.85));margin-bottom:10px}
+.modal-card h3{font-family:'Unbounded';font-weight:700;font-size:19px;margin-bottom:10px;color:var(--red);text-shadow:0 0 16px rgba(255,77,109,.5)}
+.modal-card p{color:var(--muted);font-size:14.5px;line-height:1.55}
+
+/* ============ РЕЗУЛЬТАТ ============ */
+.score-wrap{display:grid;place-items:center;margin:8px 0 4px}
+.score-box{position:relative;width:170px;height:170px}
+.score-box svg{width:100%;height:100%;transform:rotate(-90deg)}
+.score-box circle{fill:none;stroke-width:9;stroke-linecap:round}
+.sb-bg{stroke:rgba(139,161,199,.15)}
+.sb-fg{stroke:var(--cyan);stroke-dasharray:477.5;stroke-dashoffset:477.5;transition:stroke-dashoffset 1.4s cubic-bezier(.2,.8,.2,1);filter:drop-shadow(0 0 8px rgba(34,211,238,.7))}
+.score-num{position:absolute;inset:0;display:grid;place-items:center;font:800 40px 'Unbounded';text-shadow:0 0 22px rgba(34,211,238,.55)}
+.score-num small{font:700 16px 'JetBrains Mono',monospace;color:var(--muted);margin-left:4px}
+.verdict{text-align:center;font-family:'Unbounded';font-weight:700;font-size:18px;margin-top:8px}
+.v-high{color:var(--lime);text-shadow:0 0 18px rgba(184,255,46,.55)}
+.v-mid{color:var(--cyan);text-shadow:0 0 18px rgba(34,211,238,.55)}
+.v-low{color:var(--pinkL);text-shadow:0 0 18px rgba(255,46,166,.5)}
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+.res-cell{border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(8,13,26,.5)}
+.res-cell small{display:block;font:700 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.res-cell b{font-size:15px;word-break:break-word}
+.status-ok{color:var(--lime)} .status-bad{color:var(--red)}
+@media (max-width:420px){.res-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="bg-grid" aria-hidden="true"></div>
+<div class="bg-glow" aria-hidden="true"></div>
+
+<!-- ═══════════ ОКНО 1 · СТАРТ ═══════════ -->
+<section id="scrStart" class="screen active">
+  <div class="card">
+    <div class="badges">
+      <span class="chip">Физика · 7 класс</span>
+      <span class="chip pink">ЦО 7.2.1.3</span>
+      <span class="chip lime">10 вопросов · макс. 10 баллов</span>
+    </div>
+    <h1 class="title"><span class="t-top">Прямолинейное</span><span class="neon">равномерное</span> и <span class="neon-p">неравномерное</span> движение</h1>
+    <p class="sub">Различай виды движения, читай графики и рассчитывай скорость, путь и время.</p>
+
+    <div class="motion" aria-hidden="true">
+      <div class="lane"><span class="tag">РАВНОМЕРНОЕ · v = const</span><span class="track"><i class="dot uni"></i></span></div>
+      <div class="lane"><span class="tag">НЕРАВНОМЕРНОЕ · v изменяется</span><span class="track"><i class="dot acc"></i></span></div>
+    </div>
+
+    <div class="teacher">
+      <div class="ava">КД</div>
+      <div><small>Учитель физики</small><b>Кунгозин Даулет Багдашұлы</b></div>
+    </div>
+
+    <div class="field"><label for="fName">Фамилия и имя учащегося</label>
+      <input id="fName" class="inp" type="text" placeholder="Введите ФИ" autocomplete="off" maxlength="80">
+    </div>
+    <div class="row2">
+      <div class="field"><label for="fCls">Класс</label>
+        <select id="fCls" class="inp"><option value="" disabled selected>Выберите класс</option><option>7 Б</option><option>7 В</option></select>
+      </div>
+      <div class="field"><label for="fVar">Вариант</label>
+        <select id="fVar" class="inp"><option value="" disabled selected>Выберите вариант</option><option value="1">Вариант 1</option><option value="2">Вариант 2</option><option value="3">Вариант 3</option><option value="4">Вариант 4</option></select>
+      </div>
+    </div>
+    <div class="hintline" id="attHint">Заполните все поля — каждая попытка сохраняется.</div>
+
+    <button id="btnStart" class="btn armed">Продолжить →</button>
+    <div class="foot">АКАДЕМИЧЕСКАЯ ЧЕСТНОСТЬ · ПОПЫТКИ ФИКСИРУЮТСЯ</div>
+  </div>
+</section>
+
+<!-- ═══════════ ОКНО 2 · ДИСКЛЕЙМЕР ═══════════ -->
+<section id="scrRules" class="screen">
+  <div class="card">
+    <div class="badges"><span class="chip pink">Дисклеймер · правила теста</span></div>
+    <h1 class="title" style="font-size:clamp(20px,4.6vw,30px)">Прежде чем <span class="neon">начать</span></h1>
+    <div class="rules">
+      <div class="rule"><span class="ic">📋</span><span>10 вопросов: 6 тестовых (3 из них — по графикам) и 4 расчётные задачи. За каждый вопрос — <b>1 балл</b>, максимум — <b>10 баллов</b>.</span></div>
+      <div class="rule"><span class="ic">⏱</span><span>На каждый вопрос — <b>1 мин 30 сек</b>. Время вышло — автоматический переход к следующему вопросу.</span></div>
+      <div class="rule"><span class="ic">⛔</span><span>Кнопки «Назад» нет. Вернуться к предыдущему вопросу нельзя.</span></div>
+      <div class="rule"><span class="ic">🔢</span><span>Ответ на задачу — <b>только число, без единиц измерения</b> (пример: 20). Дробную часть отделяйте запятой или точкой.</span></div>
+      <div class="rule"><span class="ic">🛡</span><span><b>Античит:</b> переключение вкладки, сворачивание браузера или второе окно поверх теста — <b>1-й раз предупреждение, 2-й раз тест завершается автоматически</b>. Экранная клавиатура при вводе ответа нарушением не считается.</span></div>
+      <div class="rule"><span class="ic">🗂</span><span>Количество попыток, результат и нарушения сохраняются и передаются учителю.</span></div>
+    </div>
+    <label class="agree"><input type="checkbox" id="agreeChk"><span>Я обязуюсь выполнить тест <b>самостоятельно</b>, без посторонней помощи и подсказок — соблюдаю академическую честность.</span></label>
+    <button id="btnBegin" class="btn pinkArmed">Начать тест ⚡</button>
+  </div>
+</section>
+
+<!-- ═══════════ ОКНО 3 · ТЕСТ ═══════════ -->
+<section id="scrQuiz" class="screen">
+  <div class="card" id="qCard">
+    <div class="qhead">
+      <div class="qcount">Вопрос <b id="qNum">1</b><span id="qTot">/10</span><br>Попытка №<span id="attNum">1</span></div>
+      <div class="timer" id="timerBox">
+        <svg class="ring" viewBox="0 0 48 48"><circle class="rbg" cx="24" cy="24" r="20"/><circle class="rfg" id="ringFg" cx="24" cy="24" r="20"/></svg>
+        <span id="timeTxt">1:30</span>
+      </div>
+    </div>
+    <div class="prog" id="prog"></div>
+    <span class="qtype mc" id="qType">Тест</span>
+    <div class="qtext" id="qText"></div>
+    <div id="qGraph"></div>
+    <div class="opts" id="qOpts"></div>
+    <div class="calcbox" id="qCalc" style="display:none">
+      <input id="numAns" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="?">
+      <div class="hint">Введите только число · без единиц измерения</div>
+    </div>
+    <button id="btnNext" class="btn">Далее →</button>
+  </div>
+</section>
+
+<!-- ═══════════ ОКНО 4 · РЕЗУЛЬТАТ ═══════════ -->
+<section id="scrResult" class="screen">
+  <div class="card">
+    <div class="badges"><span class="chip">Результат теста</span><span class="chip pink" id="resStatus">Завершён</span></div>
+    <div class="score-wrap">
+      <div class="score-box">
+        <svg viewBox="0 0 170 170"><circle class="sb-bg" cx="85" cy="85" r="76"/><circle class="sb-fg" id="scoreFg" cx="85" cy="85" r="76"/></svg>
+        <div class="score-num"><span id="scoreVal">0</span><small>/ 10</small></div>
+      </div>
+    </div>
+    <div class="verdict" id="verdict"></div>
+    <div class="res-grid">
+      <div class="res-cell"><small>Учащийся</small><b id="rName"></b></div>
+      <div class="res-cell"><small>Класс · Вариант</small><b id="rClsVar"></b></div>
+      <div class="res-cell"><small>Использовано попыток</small><b id="rAttempt"></b></div>
+      <div class="res-cell"><small>Время прохождения</small><b id="rTime"></b></div>
+      <div class="res-cell"><small>Нарушения античита</small><b id="rViol"></b></div>
+      <div class="res-cell"><small>Отправка учителю</small><b id="rSheet">…</b></div>
+    </div>
+    <button id="btnAgain" class="btn armed" style="margin-top:20px">Пройти ещё раз ↺</button>
+  </div>
+</section>
+
+<!-- предупреждение античита -->
+<div id="acWarn" class="modal">
+  <div class="modal-card">
+    <div class="warn-ico">⚠️</div>
+    <h3>Нарушение <span id="warnNum">1</span> из 2</h3>
+    <p>Зафиксирован уход со страницы теста: переключение вкладки, сворачивание браузера или второе окно поверх теста. При следующем нарушении тест будет <b>завершён автоматически</b>, попытка будет засчитана.</p>
+    <button id="warnOk" class="btn armed" style="margin-top:18px">Понятно, продолжаю</button>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+"use strict";
+/* ═════════════════════ НАСТРОЙКИ ═════════════════════ */
+const CONFIG = {
+  SHEETS_URL: "https://script.google.com/macros/s/AKfycbxXJzJYxfKypKBPtvUYN8d2va40MEQKrolldBJYa4YIACR1ODapSgy5knjdTIfajwHH/exec", // ← URL из Apps Script (Deploy → Web app)
+  TIME_Q: 90                                   // секунд на вопрос (1,5 мин)
+};
+const LET = ["А","Б","В","Г"];
+
+/* ═════════════════════ БАНК ВОПРОСОВ ═════════════════
+   1–3 тест, 4–6 графики, 7–10 расчётные                  */
+const BANK = {
+1:[
+ {t:'mc',q:'Какое движение называется прямолинейным равномерным?',o:['Движение, при котором тело за любые равные промежутки времени проходит равные пути','Движение, при котором скорость тела изменяется с течением времени','Движение, траектория которого является кривой линией','Движение, при котором тело за равные промежутки времени проходит разные пути'],a:0},
+ {t:'mc',q:'Что из перечисленного является примером неравномерного движения?',o:['Поезд, тормозящий перед станцией','Эскалатор метро, движущийся с постоянной скоростью','Автомобиль, едущий по прямому шоссе с неизменной скоростью','Пузырёк воздуха, всплывающий в воде с постоянной скоростью'],a:0},
+ {t:'mc',q:'При прямолинейном равномерном движении тела его скорость:',o:['остаётся постоянной','увеличивается с течением времени','уменьшается с течением времени','равна нулю'],a:0},
+ {t:'mc',g:{xL:'t, с',yL:'s, м',xMax:6,yMax:12,yStep:2,pts:[[0,0],[6,12]]},q:'На рисунке показан график зависимости пути s от времени t. Определите вид движения тела.',o:['Прямолинейное равномерное','Прямолинейное неравномерное','Тело находится в покое','Движение по криволинейной траектории'],a:0},
+ {t:'mc',g:{xL:'t, с',yL:'s, м',xMax:6,yMax:12,yStep:2,pts:[[0,0],[3,12]],drop:[3,12]},q:'По графику зависимости пути от времени определите скорость тела.',o:['3 м/с','4 м/с','12 м/с','36 м/с'],a:1},
+ {t:'mc',g:{xL:'t, с',yL:'v, м/с',xMax:6,yMax:10,yStep:2,h:5},q:'На рисунке показан график зависимости скорости движения тела от времени. Как движется тело?',o:['Равномерно — скорость постоянна','Неравномерно — скорость растёт','Неравномерно — скорость убывает','Тело находится в покое'],a:0},
+ {t:'calc',a:20,q:'Автомобиль проехал 120 м за 6 с. Определите скорость автомобиля.<div class="hint">Подсказка: v = s / t · ответ в м/с, только число</div>'},
+ {t:'calc',a:60,q:'Пешеход движется прямолинейно и равномерно со скоростью 5 м/с. Какой путь он пройдёт за 12 с?<div class="hint">Подсказка: s = v · t · ответ в метрах, только число</div>'},
+ {t:'calc',a:10,q:'Велосипедист проехал первые 100 м за 10 с, а следующие 150 м — за 15 с. Найдите среднюю скорость на всём пути.<div class="hint">Подсказка: v<sub>ср</sub> = s<sub>общ</sub> / t<sub>общ</sub> · ответ в м/с, только число</div>'},
+ {t:'calc',a:30,q:'Поезд движется равномерно со скоростью 15 м/с. За какое время он пройдёт путь 450 м?<div class="hint">Подсказка: t = s / v · ответ в секундах, только число</div>'}
+],
+2:[
+ {t:'mc',q:'Неравномерным называется движение, при котором:',o:['скорость тела с течением времени изменяется','тело проходит равные пути за равные промежутки времени','траектория тела является прямой линией','тело находится в состоянии покоя'],a:0},
+ {t:'mc',q:'Что из перечисленного можно считать практически равномерным прямолинейным движением?',o:['Движение лифта, поднимающегося с постоянной скоростью','Разгон автомобиля после зелёного сигнала светофора','Падение камня вниз','Движение качелей'],a:0},
+ {t:'mc',q:'Средняя скорость при неравномерном движении равна:',o:['отношению всего пройденного пути ко всему времени движения (v<sub>ср</sub> = s<sub>общ</sub> / t<sub>общ</sub>)','наибольшей скорости за время движения','скорости тела в любой момент времени','сумме скоростей на отдельных участках'],a:0},
+ {t:'mc',g:{xL:'t, с',yL:'v, м/с',xMax:6,yMax:8,yStep:2,h:4},q:'На рисунке показан график зависимости скорости тела от времени. Определите вид движения.',o:['Равномерное — скорость не изменяется','Неравномерное — скорость растёт','Неравномерное — скорость убывает','Тело находится в покое'],a:0},
+ {t:'mc',g:{xL:'t, с',yL:'s, м',xMax:6,yMax:15,yStep:5,pts:[[0,0],[5,15]],drop:[5,15]},q:'По графику зависимости пути от времени определите скорость тела.',o:['2 м/с','3 м/с','5 м/с','15 м/с'],a:1},
+ {t:'mc',g:{xL:'t, с',yL:'v, м/с',xMax:6,yMax:8,yStep:2,pts:[[0,1],[6,7]]},q:'На рисунке показан график зависимости скорости тела от времени. Как движется тело?',o:['Неравномерно — скорость увеличивается','Неравномерно — скорость уменьшается','Равномерно — скорость постоянна','Тело находится в покое'],a:0},
+ {t:'calc',a:30,q:'Лыжник прошёл 240 м за 8 с. Определите скорость лыжника.<div class="hint">Подсказка: v = s / t · ответ в м/с, только число</div>'},
+ {t:'calc',a:100,q:'Мотоциклист движется прямолинейно и равномерно со скоростью 4 м/с. Какой путь он проедет за 25 с?<div class="hint">Подсказка: s = v · t · ответ в метрах, только число</div>'},
+ {t:'calc',a:12,q:'Автобус проехал первые 50 м за 5 с, а следующие 190 м — за 15 с. Найдите среднюю скорость автобуса на всём пути.<div class="hint">Подсказка: v<sub>ср</sub> = s<sub>общ</sub> / t<sub>общ</sub> · ответ в м/с, только число</div>'},
+ {t:'calc',a:40,q:'Сколько времени понадобится велосипедисту, чтобы проехать 560 м со скоростью 14 м/с?<div class="hint">Подсказка: t = s / v · ответ в секундах, только число</div>'}
+],
+3:[
+ {t:'mc',q:'Движение тела называется прямолинейным, если:',o:['его траектория является прямой линией','его траектория является кривой линией','тело движется по окружности','тело периодически меняет направление движения'],a:0},
+ {t:'mc',q:'Тело движется неравномерно, если за равные промежутки времени:',o:['оно проходит разные пути','оно проходит равные пути','его скорость не изменяется','оно остаётся на месте'],a:0},
+ {t:'mc',q:'Основная единица скорости в СИ:',o:['метр в секунду (м/с)','километр в час (км/ч)','метр (м)','секунда (с)'],a:0},
+ {t:'mc',g:{xL:'t, с',yL:'s, м',xMax:6,yMax:9,yStep:3,pts:[[0,0],[6,9]]},q:'На рисунке показан график зависимости пути s от времени t. Определите вид движения тела.',o:['Прямолинейное равномерное','Прямолинейное неравномерное','Тело находится в покое','Движение по криволинейной траектории'],a:0},
+ {t:'mc',g:{xL:'t, с',yL:'s, м',xMax:6,yMax:20,yStep:5,pts:[[0,0],[5,20]],drop:[5,20]},q:'По графику зависимости пути от времени определите скорость тела.',o:['2 м/с','4 м/с','5 м/с','20 м/с'],a:1},
+ {t:'mc',g:{xL:'t, с',yL:'v, м/с',xMax:6,yMax:10,yStep:2,pts:[[0,8],[6,2]]},q:'На рисунке показан график зависимости скорости тела от времени. Как движется тело?',o:['Неравномерно — скорость уменьшается','Неравномерно — скорость растёт','Равномерно — скорость постоянна','Тело находится в покое'],a:0},
+ {t:'calc',a:22,q:'Катер прошёл 330 м за 15 с. Определите скорость катера.<div class="hint">Подсказка: v = s / t · ответ в м/с, только число</div>'},
+ {t:'calc',a:140,q:'Заяц бежит прямолинейно и равномерно со скоростью 7 м/с. Какой путь он пробежит за 20 с?<div class="hint">Подсказка: s = v · t · ответ в метрах, только число</div>'},
+ {t:'calc',a:11,q:'Первые 80 м мальчик на санках проехал за 8 с, а следующие 140 м — за 12 с. Определите среднюю скорость на всём пути.<div class="hint">Подсказка: v<sub>ср</sub> = s<sub>общ</sub> / t<sub>общ</sub> · ответ в м/с, только число</div>'},
+ {t:'calc',a:25,q:'За какое время лыжник пройдёт 400 м, двигаясь равномерно со скоростью 16 м/с?<div class="hint">Подсказка: t = s / v · ответ в секундах, только число</div>'}
+],
+4:[
+ {t:'mc',q:'Траектория — это:',o:['линия, вдоль которой движется тело','путь, пройденный телом','скорость движения тела','промежуток времени движения'],a:0},
+ {t:'mc',q:'Признак равномерного прямолинейного движения:',o:['за любые равные промежутки времени тело проходит равные пути','скорость тела постоянно увеличивается','тело проходит разные пути за равные промежутки времени','траектория движения является кривой линией'],a:0},
+ {t:'mc',q:'Средняя скорость при неравномерном движении определяется по формуле:',o:['v<sub>ср</sub> = s<sub>общ</sub> / t<sub>общ</sub>','v<sub>ср</sub> = v₁ + v₂','v<sub>ср</sub> = s<sub>общ</sub> · t<sub>общ</sub>','v<sub>ср</sub> = t<sub>общ</sub> / s<sub>общ</sub>'],a:0},
+ {t:'mc',g:{xL:'t, с',yL:'v, м/с',xMax:6,yMax:12,yStep:2,h:6},q:'На рисунке показан график зависимости скорости тела от времени. Определите вид движения.',o:['Равномерное — скорость не изменяется','Неравномерное — скорость растёт','Неравномерное — скорость убывает','Тело находится в покое'],a:0},
+ {t:'mc',g:{xL:'t, с',yL:'s, м',xMax:8,yMax:16,xStep:2,yStep:4,pts:[[0,0],[7,14]],drop:[7,14]},q:'По графику зависимости пути от времени определите скорость тела.',o:['2 м/с','7 м/с','14 м/с','21 м/с'],a:0},
+ {t:'mc',g:{xL:'t, с',yL:'s, м',xMax:6,yMax:12,yStep:2,fn:t=>t*t/3,to:6},q:'На рисунке показан график зависимости пути от времени. Определите характер движения тела.',o:['Неравномерное — скорость изменяется','Равномерное — скорость постоянна','Тело находится в покое','Равномерное, но траектория — окружность'],a:0},
+ {t:'calc',a:17,q:'Пловец проплыл 170 м за 10 с. Определите скорость пловца.<div class="hint">Подсказка: v = s / t · ответ в м/с, только число</div>'},
+ {t:'calc',a:270,q:'Автомобиль движется прямолинейно и равномерно со скоростью 9 м/с. Какой путь он проедет за 30 с?<div class="hint">Подсказка: s = v · t · ответ в метрах, только число</div>'},
+ {t:'calc',a:15,q:'Первую часть пути 75 м велосипедист проехал за 5 с, а вторую часть 225 м — за 15 с. Найдите среднюю скорость на всём пути.<div class="hint">Подсказка: v<sub>ср</sub> = s<sub>общ</sub> / t<sub>общ</sub> · ответ в м/с, только число</div>'},
+ {t:'calc',a:30,q:'За какое время поезд пройдёт 660 м, двигаясь равномерно со скоростью 22 м/с?<div class="hint">Подсказка: t = s / v · ответ в секундах, только число</div>'}
+]};
+
+/* ═════════════════════ СОСТОЯНИЕ ═════════════════════ */
+const state={name:'',cls:'',variant:0,qIndex:0,answers:[],running:false,finished:false,attempt:0,violations:0,startTs:0};
+const $=s=>document.querySelector(s);
+const LS_KEY='fiz7_attempts_v1';
+
+/* ═════════════════════ ГРАФИКИ SVG (в клетку) ═════════════════════ */
+function buildGraph(c){
+  const W=340,H=254,ox=56,oy=206,right=W-16,top=18,pw=right-ox,ph=oy-top;
+  const ux=pw/c.xMax, uy=ph/c.yMax;
+  const X=u=>+(ox+u*ux).toFixed(1), Y=v=>+(oy-v*uy).toFixed(1);
+  let g=`<defs><clipPath id="cp${c.id}"><rect x="${ox}" y="${top}" width="${pw}" height="${ph}"/></clipPath></defs>`;
+  const cell=22; // квадратная «клетка» тетради
+  for(let x=ox+cell;x<right;x+=cell) g+=`<line x1="${x}" y1="${top}" x2="${x}" y2="${oy}" class="gm"/>`;
+  for(let y=oy-cell;y>top;y-=cell)   g+=`<line x1="${ox}" y1="${y}" x2="${right}" y2="${y}" class="gm"/>`;
+  g+=`<line x1="${ox}" y1="${oy}" x2="${right}" y2="${oy}" class="ax"/><path d="M${right} ${oy} l-9 -4.5 v9 z" class="axf"/>`;
+  g+=`<line x1="${ox}" y1="${oy}" x2="${ox}" y2="${top}" class="ax"/><path d="M${ox} ${top} l-4.5 9 h9 z" class="axf"/>`;
+  const xs=c.xStep||1;
+  for(let i=xs;i<=c.xMax;i+=xs){g+=`<line x1="${X(i)}" y1="${oy}" x2="${X(i)}" y2="${oy+5}" class="ax"/><text x="${X(i)}" y="${oy+19}" class="tk" text-anchor="middle">${i}</text>`;}
+  const ys=c.yStep||1;
+  for(let i=ys;i<=c.yMax;i+=ys){g+=`<line x1="${ox-5}" y1="${Y(i)}" x2="${ox}" y2="${Y(i)}" class="ax"/><text x="${ox-9}" y="${Y(i)+4}" class="tk" text-anchor="end">${i}</text>`;}
+  g+=`<text x="${ox-10}" y="${oy+19}" class="tk" text-anchor="end">0</text>`;
+  g+=`<text x="${right-2}" y="${oy-9}" class="al" text-anchor="end">${c.xL}</text><text x="${ox+10}" y="${top+14}" class="al">${c.yL}</text>`;
+  let pts=[];
+  if(c.h!=null) pts=[[0,c.h],[c.xMax,c.h]];
+  else if(c.fn){for(let t=0;t<=c.to+1e-9;t+=c.to/48) pts.push([t,c.fn(t)]);}
+  else pts=c.pts;
+  const d=pts.map((p,i)=>(i?'L':'M')+X(p[0])+' '+Y(p[1])).join(' ');
+  g+=`<g clip-path="url(#cp${c.id})">`;
+  if(c.drop){const[dt,ds]=c.drop;g+=`<line x1="${X(dt)}" y1="${oy}" x2="${X(dt)}" y2="${Y(ds)}" class="dash"/><line x1="${ox}" y1="${Y(ds)}" x2="${X(dt)}" y2="${Y(ds)}" class="dash"/>`;}
+  g+=`<path d="${d}" class="ln-glow"/><path d="${d}" class="ln"/>`;
+  if(!c.fn){const f=pts[0];g+=`<circle cx="${X(f[0])}" cy="${Y(f[1])}" r="3.4" class="pt"/>`;}
+  const l=pts[pts.length-1]; g+=`<circle cx="${X(l[0])}" cy="${Y(l[1])}" r="4" class="pt"/></g>`;
+  return `<svg viewBox="0 0 ${W} ${H}" class="graph" role="img">${g}</svg>`;
+}
+
+/* ═════════════════════ НАВИГАЦИЯ ПО ЭКРАНАМ ═════════════════════ */
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$('#'+id).classList.add('active');window.scrollTo({top:0});}
+let toastT;
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2300);}
+
+/* ═════════════════════ ПОПЫТКИ (localStorage) ═════════════════════ */
+function getAttempts(){try{return JSON.parse(localStorage.getItem(LS_KEY)||'{}');}catch(e){return{};}}
+function saveAttempts(m){try{localStorage.setItem(LS_KEY,JSON.stringify(m));}catch(e){}}
+function keyFor(n,c,v){return `${n.trim().toLowerCase()}|${c}|${v}`;}
+function bumpAttempt(){const m=getAttempts();const k=keyFor(state.name,state.cls,state.variant);m[k]=(m[k]||0)+1;saveAttempts(m);state.attempt=m[k];return m[k];}
+
+/* ═════════════════════ ЭКРАН СТАРТА ═════════════════════ */
+const fName=$('#fName'),fCls=$('#fCls'),fVar=$('#fVar');
+function updAttHint(){
+  const el=$('#attHint');
+  if(!fName.value.trim()||!fCls.value||!fVar.value){el.textContent='Заполните все поля — каждая попытка сохраняется.';return;}
+  const used=getAttempts()[keyFor(fName.value,fCls.value,fVar.value)]||0;
+  el.textContent=used?`⚡ Использовано попыток: ${used}`:'Попыток пока не было — удачи!';
+}
+[fName,fCls,fVar].forEach(el=>el.addEventListener('input',updAttHint));
+$('#btnStart').addEventListener('click',()=>{
+  if(fName.value.trim().length<3){toast('Введите фамилию и имя');fName.focus();return;}
+  if(!fCls.value){toast('Выберите класс');return;}
+  if(!fVar.value){toast('Выберите вариант');return;}
+  state.name=fName.value.trim();state.cls=fCls.value;state.variant=+fVar.value;
+  show('scrRules');
+});
+
+/* ═════════════════════ ТАЙМЕР ═════════════════════ */
+const CIRC=125.66;
+const T={id:null,deadline:0,remain:CONFIG.TIME_Q*1000,paused:false};
+function fmt(ms){const s=Math.max(0,Math.ceil(ms/1000));return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;}
+function startTimer(){
+  T.remain=CONFIG.TIME_Q*1000;T.deadline=Date.now()+T.remain;T.paused=false;
+  $('#timerBox').classList.remove('danger');renderTimer(T.remain);
+  clearInterval(T.id);T.id=setInterval(()=>{
+    if(T.paused)return;
+    const left=T.deadline-Date.now();
+    renderTimer(Math.max(0,left));
+    $('#timerBox').classList.toggle('danger',left<=15000);
+    if(left<=0){clearInterval(T.id);timeUp();}
+  },200);
+}
+function renderTimer(left){
+  $('#timeTxt').textContent=fmt(left);
+  $('#ringFg').style.strokeDashoffset=CIRC*(1-left/(CONFIG.TIME_Q*1000));
+}
+function pauseTimer(){T.paused=true;T.remain=Math.max(0,T.deadline-Date.now());}
+function resumeTimer(){T.deadline=Date.now()+T.remain;T.paused=false;}
+function timeUp(){
+  $('#qCard').classList.add('locked');
+  toast('⏱ Время вышло — переход к следующему вопросу');
+  setTimeout(next,950);
+}
+
+/* ═════════════════════ РЕНДЕР ВОПРОСА ═════════════════════ */
+const qOpts=$('#qOpts'),qCalc=$('#qCalc'),btnNext=$('#btnNext');
+function renderQ(){
+  const q=BANK[state.variant][state.qIndex];
+  $('#qCard').classList.remove('locked');
+  $('#qNum').textContent=state.qIndex+1;$('#qTot').textContent='/'+BANK[state.variant].length;
+  $('#attNum').textContent=state.attempt;
+  [...$('#prog').children].forEach((el,i)=>{el.className=i<state.qIndex?'done':(i===state.qIndex?'cur':'');});
+  const badge=q.t==='calc'?['ca','Расчётная задача']:q.g?['gr','Тест · график']:['mc','Тест'];
+  const qt=$('#qType');qt.className='qtype '+badge[0];qt.textContent=badge[1];
+  $('#qText').innerHTML=q.q;
+  $('#qGraph').innerHTML=q.g?buildGraph({...q.g,id:'g'+state.variant+'_'+state.qIndex}):'';
+  btnNext.classList.remove('armed');
+  btnNext.textContent=state.qIndex===BANK[state.variant].length-1?'Показать результат ✓':'Далее →';
+  if(q.t==='calc'){
+    qOpts.style.display='none';qCalc.style.display='grid';
+    const inp=$('#numAns');inp.value='';inp.classList.remove('ok');
+    state.answers[state.qIndex]=null;
+    setTimeout(()=>{try{inp.focus({preventScroll:true});}catch(e){}},420);
+  }else{
+    qCalc.style.display='none';qOpts.style.display='grid';
+    qOpts.innerHTML=q.o.map((t,i)=>`<button class="opt" type="button" data-i="${i}"><span class="k">${LET[i]}</span><span>${t}</span></button>`).join('');
+    qOpts.querySelectorAll('.opt').forEach(b=>b.addEventListener('click',()=>{
+      if(!state.running)return;
+      qOpts.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel');
+      state.answers[state.qIndex]=+b.dataset.i;
+      btnNext.classList.add('armed');
+    }));
+  }
+}
+$('#numAns').addEventListener('input',e=>{
+  const el=e.target;
+  const raw=el.value.trim().replace(/\s+/g,'').replace(',','.');
+  const ok=/^-?\d{1,7}(\.\d{0,4})?$/.test(raw);
+  el.classList.toggle('ok',ok);
+  state.answers[state.qIndex]=ok?raw:null;
+  btnNext.classList.toggle('armed',ok);
+});
+btnNext.addEventListener('click',()=>{
+  if(!btnNext.classList.contains('armed')||!state.running)return;
+  next();
+});
+function next(){
+  clearInterval(T.id);
+  if(state.qIndex===BANK[state.variant].length-1){finish('Завершён');return;}
+  state.qIndex++;renderQ();startTimer();window.scrollTo({top:0});
+}
+
+/* ═════════════════════ ОЦЕНКА И ФИНИШ ═════════════════════ */
+function computeScore(){
+  let s=0;
+  BANK[state.variant].forEach((q,i)=>{
+    const a=state.answers[i];
+    if(a==null)return;
+    if(q.t==='calc'){const v=parseFloat(String(a).replace(',','.'));if(Number.isFinite(v)&&Math.abs(v-q.a)<0.01)s++;}
+    else if(a===q.a)s++;
+  });
+  return s;
+}
+async function finish(status){
+  if(state.finished)return;
+  state.finished=true;state.running=false;clearInterval(T.id);
+  const score=computeScore();
+  const dur=Math.round((Date.now()-state.startTs)/1000);
+  const st=$('#resStatus');
+  st.textContent=status;
+  st.classList.add(status==='Завершён'?'status-ok':'status-bad');
+  $('#rName').textContent=state.name;
+  $('#rClsVar').textContent=`${state.cls} · Вариант ${state.variant}`;
+  $('#rAttempt').textContent=state.attempt;
+  $('#rTime').textContent=`${Math.floor(dur/60)} мин ${String(dur%60).padStart(2,'0')} с`;
+  $('#rViol').textContent=state.violations;
+  const vd=$('#verdict');
+  if(score>=9){vd.textContent='Отличный результат!';vd.className='verdict v-high';}
+  else if(score>=7){vd.textContent='Хороший результат';vd.className='verdict v-mid';}
+  else if(score>=5){vd.textContent='Удовлетворительно';vd.className='verdict v-mid';}
+  else{vd.textContent='Стоит повторить тему';vd.className='verdict v-low';}
+  show('scrResult');
+  $('#scoreVal').textContent='0';
+  requestAnimationFrame(()=>{ $('#scoreFg').style.strokeDashoffset=477.5*(1-score/10);
+    let n=0;const iv=setInterval(()=>{n++;$('#scoreVal').textContent=n;if(n>=score)clearInterval(iv);},110);
+  });
+  const payload={name:state.name,cls:state.cls,variant:state.variant,score,max:10,percent:score*10,attempt:state.attempt,status,violations:state.violations,durationSec:dur};
+  const ok=await sendToSheets(payload);
+  const rs=$('#rSheet');
+  rs.textContent=ok?'Отправлено ✓':'Не отправлено (нет связи)';
+  rs.className=ok?'status-ok':'status-bad';
+}
+$('#btnAgain').addEventListener('click',()=>location.reload());
+
+/* ═════════════════════ ОТПРАВКА В GOOGLE SHEETS ═════════════════════ */
+async function sendToSheets(p){
+  if(!CONFIG.SHEETS_URL||CONFIG.SHEETS_URL.includes('ВСТАВЬТЕ'))return false;
+  const body=JSON.stringify(p);
+  try{
+    await fetch(CONFIG.SHEETS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body});
+    return true;
+  }catch(e){
+    try{navigator.sendBeacon(CONFIG.SHEETS_URL,body);return true;}catch(_){return false;}
+  }
+}
+
+/* ═════════════════════ АНТИЧИТ ═════════════════════
+   1-й уход со страницы → предупреждение, 2-й → завершение.
+   Экранная клавиатура (ввод ответа) и кратковременные
+   «потери фокуса» на iPhone нарушением НЕ считаются.      */
+const AC={violations:0,lastAt:0,lastInputFocus:0,kbdNow:false,vv0:0,baseW:0,baseH:0};
+function fieldFocused(){
+  const ae=document.activeElement;
+  return !!ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA');
+}
+function keyboardLikely(){
+  if(!fieldFocused())return false;
+  if(AC.kbdNow)return true;
+  if(performance.now()-AC.lastInputFocus<1600)return true; // клавиатура выезжает/анимируется
+  return false;
+}
+document.addEventListener('focusin',e=>{
+  if(e.target&&(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'))AC.lastInputFocus=performance.now();
+});
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize',()=>{
+    AC.kbdNow=fieldFocused()&&window.visualViewport.height<AC.vv0*0.8;
+  });
+}
+function acViolation(){
+  if(!state.running||state.finished)return;
+  const now=Date.now();
+  if(now-AC.lastAt<1500)return; // blur+visibilitychange одной пары событий
+  AC.lastAt=now;AC.violations++;state.violations=AC.violations;
+  if(AC.violations>=2){finish('Прерван (античит)');}
+  else{pauseTimer();$('#warnNum').textContent=AC.violations;$('#acWarn').classList.add('show');}
+}
+$('#warnOk').addEventListener('click',()=>{$('#acWarn').classList.remove('show');resumeTimer();});
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden')acViolation(); // свернули вкладку/приложение
+});
+window.addEventListener('blur',()=>{
+  if(!state.running)return;
+  if(keyboardLikely())return; // цифровая клавиатура — не нарушение
+  setTimeout(()=>{
+    if(!state.running)return;
+    if(document.hasFocus())return;                    // ложная потеря фокуса (iPhone)
+    if(document.visibilityState==='hidden')return;    // обработано выше
+    acViolation();                                    // второе окно поверх теста
+  },400);
+});
+window.addEventListener('resize',()=>{
+  if(!state.running)return;
+  if(keyboardLikely())return;
+  if(Math.abs(window.innerWidth-AC.baseW)>80){AC.baseW=innerWidth;AC.baseH=innerHeight;return;} // поворот экрана
+  if(AC.baseH&&window.innerHeight<AC.baseH*0.72)acViolation(); // выдвижное окно уменьшило страницу
+});
+window.addEventListener('beforeunload',e=>{if(state.running){e.preventDefault();e.returnValue='';}});
+document.addEventListener('contextmenu',e=>{if(state.running)e.preventDefault();});
+
+/* ═════════════════════ ЗАПУСК ТЕСТА ═════════════════════ */
+$('#btnBegin').addEventListener('click',()=>{
+  if(!$('#agreeChk').checked){toast('Подтвердите академическую честность');return;}
+  state.answers=new Array(BANK[state.variant].length).fill(null);
+  state.qIndex=0;state.violations=0;AC.violations=0;
+  state.attempt=bumpAttempt();
+  state.running=true;state.finished=false;state.startTs=Date.now();
+  AC.baseW=innerWidth;AC.baseH=innerHeight;
+  AC.vv0=window.visualViewport?visualViewport.height:innerHeight;
+  $('#prog').innerHTML='<i></i>'.repeat(BANK[state.variant].length);
+  show('scrQuiz');renderQ();startTimer();
+});
+</script>
+</body>
+</html>
